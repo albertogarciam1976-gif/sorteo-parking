@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Parking" />
+  <meta name="theme-color" content="#eef2ff" id="metaThemeColor" />
+  <title>Sorteo de Parking</title>
+  <!-- Icono generado dinámicamente vía canvas para pantalla de inicio de iPhone -->
+  <link rel="apple-touch-icon" id="appleTouchIcon" href="" />
+  <style>
+    :root {
+      --bg-base: #eef2ff;
+      --glass-bg: rgba(255, 255, 255, 0.58);
+      --glass-bg-elevated: rgba(255, 255, 255, 0.78);
+      --glass-bg-subtle: rgba(255, 255, 255, 0.36);
+      --glass-border: rgba(255, 255, 255, 0.85);
+      --glass-border-subtle: rgba(255, 255, 255, 0.45);
+      --glass-shadow: 0 12px 36px -6px rgba(31, 38, 135, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent: #007aff;
+      --accent-soft: rgba(0, 122, 255, 0.14);
+      --accent-glow: rgba(0, 122, 255, 0.35);
+      --success: #10b981;
+      --success-soft: rgba(16, 185, 129, 0.16);
+      --warning: #f59e0b;
+      --warning-soft: rgba(245, 158, 11, 0.16);
+      --danger: #ef4444;
+      --danger-soft: rgba(239, 68, 68, 0.14);
+      --orb-1: rgba(96, 165, 250, 0.55);
+      --orb-2: rgba(192, 132, 252, 0.50);
+      --orb-3: rgba(52, 211, 153, 0.42);
+      --orb-4: rgba(251, 146, 60, 0.35);
+      --input-bg: rgba(255, 255, 255, 0.65);
+    }
+
+    body.dark-mode {
+      --bg-base: #070b14;
+      --glass-bg: rgba(22, 28, 45, 0.62);
+      --glass-bg-elevated: rgba(30, 38, 58, 0.82);
+      --glass-bg-subtle: rgba(17, 22, 36, 0.48);
+      --glass-border: rgba(255, 255, 255, 0.16);
+      --glass-border-subtle: rgba(255, 255, 255, 0.08);
+      --glass-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.18);
+      --accent-glow: rgba(56, 189, 248, 0.40);
+      --success: #34d399;
+      --success-soft: rgba(52, 211, 153, 0.18);
+      --warning: #fbbf24;
+      --warning-soft: rgba(251, 191, 36, 0.18);
+      --danger: #f87171;
+      --danger-soft: rgba(248, 113, 113, 0.18);
+      --orb-1: rgba(29, 78, 216, 0.45);
+      --orb-2: rgba(126, 34, 206, 0.42);
+      --orb-3: rgba(4, 120, 87, 0.38);
+      --orb-4: rgba(194, 65, 12, 0.30);
+      --input-bg: rgba(15, 23, 42, 0.65);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      transition: background-color 0.4s ease, color 0.3s ease;
+    }
+
+    /* Fondo dinámico Apple Glass con orbes flotantes */
+    .wallpaper {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(75px);
+      opacity: 0.9;
+      animation: floatOrb 18s ease-in-out infinite alternate;
+    }
+
+    .orb-1 {
+      width: 320px;
+      height: 320px;
+      background: var(--orb-1);
+      top: -60px;
+      left: -80px;
+    }
+
+    .orb-2 {
+      width: 340px;
+      height: 340px;
+      background: var(--orb-2);
+      top: 28%;
+      right: -100px;
+      animation-delay: -5s;
+    }
+
+    .orb-3 {
+      width: 300px;
+      height: 300px;
+      background: var(--orb-3);
+      bottom: -40px;
+      left: -50px;
+      animation-delay: -10s;
+    }
+
+    .orb-4 {
+      width: 240px;
+      height: 240px;
+      background: var(--orb-4);
+      bottom: 22%;
+      right: 10%;
+      animation-delay: -14s;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(24px, 32px) scale(1.08); }
+      100% { transform: translate(-18px, 16px) scale(0.95); }
+    }
+
+    /* Dynamic Island Toast Notification */
+    .dynamic-island {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 12px) + 10px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-140%);
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.92);
+      color: #ffffff;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 13.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+      transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+      max-width: 90vw;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dynamic-island.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Contenedor Principal Mobile-First */
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: calc(env(safe-area-inset-top, 16px) + 14px) 16px calc(env(safe-area-inset-bottom, 20px) + 104px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Cabecera Glass */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 2px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #007aff, #5856d6);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      box-shadow: 0 8px 20px rgba(0, 122, 255, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .brand-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      line-height: 1.15;
+    }
+
+    .brand-text p {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      box-shadow: var(--glass-shadow);
+      transition: transform 0.18s ease, background 0.2s ease;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.91);
+    }
+
+    /* Segmented Control iOS */
+    .segmented-control {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: var(--glass-bg-subtle);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 4px;
+      box-shadow: var(--glass-shadow);
+    }
+
+    .seg-btn {
+      position: relative;
+      z-index: 2;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 9px 4px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: color 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .seg-btn.active {
+      color: var(--text-primary);
+    }
+
+    .seg-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .seg-indicator {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 4px;
+      width: calc(25% - 2px);
+      background: var(--glass-bg-elevated);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.32s cubic-bezier(0.25, 1, 0.5, 1);
+      z-index: 1;
+    }
+
+    /* Paneles Glass */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(26px) saturate(185%);
+      -webkit-backdrop-filter: blur(26px) saturate(185%);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: var(--glass-shadow);
+      animation: fadeSlideUp 0.28s ease;
+    }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .card-subtitle {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .text-action {
+      border: none;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 11px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .text-action:active {
+      transform: scale(0.94);
+    }
+
+    /* Formulario Añadir */
+    .add-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .glass-input {
+      flex: 1;
+      height: 46px;
+      border-radius: 14px;
+      border: 1px solid var(--glass-border);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      padding: 0 14px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .glass-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .glass-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .add-btn {
+      width: 46px;
+      height: 46px;
+      flex-shrink: 0;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 24px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 6px 16px var(--accent-glow);
+      transition: transform 0.15s ease, opacity 0.2s ease;
+    }
+
+    .add-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Lista de Chips / Filas */
+    .items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: var(--glass-bg-subtle);
+      border: 1px solid var(--glass-border-subtle);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .item-row.selected {
+      background: var(--glass-bg-elevated);
+      border-color: var(--accent);
+      box-shadow: 0 4px 14px rgba(0, 122, 255, 0.12);
+    }
+
+    .item-row:active {
+      transform: scale(0.985);
+    }
+
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .check-circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+      font-size: 13px;
+      color: transparent;
+    }
+
+    .item-row.selected .check-circle {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .item-name {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .win-pill {
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
+    .del-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      border: none;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .del-btn:active {
+      transform: scale(0.9);
+    }
+
+    /* Tab Resultado */
+    .result-banner {
+      text-align: center;
+      padding: 16px 12px;
+      border-radius: 18px;
+      background: var(--glass-bg-subtle);
+      border: 1px solid var(--glass-border-subtle);
+      margin-bottom: 16px;
+    }
+
+    .result-banner h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .result-banner p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .assign-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 15px;
+      border-radius: 16px;
+      background: var(--glass-bg-elevated);
+      border: 1px solid var(--glass-border);
+      margin-bottom: 10px;
+    }
+
+    .assign-person {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--success-soft);
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .spot-tag {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin: 16px 0 8px;
+    }
+
+    .chip-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .wait-chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .free-chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .whatsapp-btn {
+      width: 100%;
+      margin-top: 18px;
+      height: 48px;
+      border-radius: 15px;
+      border: none;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.32);
+      transition: transform 0.15s ease;
+    }
+
+    .whatsapp-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Historial y Ranking */
+    .stats-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .stat-pill {
+      padding: 6px 11px;
+      border-radius: 12px;
+      background: var(--glass-bg-subtle);
+      border: 1px solid var(--glass-border-subtle);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .stat-pill.active-filter {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .history-entry {
+      padding: 14px;
+      border-radius: 18px;
+      background: var(--glass-bg-subtle);
+      border: 1px solid var(--glass-border-subtle);
+      margin-bottom: 12px;
+    }
+
+    .history-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--glass-border-subtle);
+    }
+
+    .history-date {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mini-btn {
+      border: none;
+      background: var(--glass-bg-elevated);
+      color: var(--text-primary);
+      padding: 5px 9px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .history-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13.5px;
+      padding: 3px 0;
+    }
+
+    /* Glass Dock Inferior */
+    .glass-dock {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom, 14px) + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 448px;
+      z-index: 50;
+      background: var(--glass-bg-elevated);
+      backdrop-filter: blur(28px) saturate(200%);
+      -webkit-backdrop-filter: blur(28px) saturate(200%);
+      border: 1px solid var(--glass-border);
+      border-radius: 22px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+    }
+
+    .dock-summary {
+      padding-left: 6px;
+    }
+
+    .dock-counts {
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .dock-hint {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+
+    .draw-btn {
+      height: 46px;
+      padding: 0 22px;
+      border-radius: 15px;
+      border: none;
+      background: linear-gradient(135deg, #007aff, #5856d6);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 22px var(--accent-glow);
+      transition: transform 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .draw-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Modal Confirmación Apple Glass */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 900;
+      background: rgba(0, 0, 0, 0.38);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 320px;
+      background: var(--glass-bg-elevated);
+      backdrop-filter: blur(30px) saturate(200%);
+      -webkit-backdrop-filter: blur(30px) saturate(200%);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 22px 18px 16px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .modal-box h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .modal-box p {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      margin-bottom: 18px;
+    }
+
+    .modal-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      height: 42px;
+      border-radius: 13px;
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .modal-cancel {
+      background: var(--glass-bg-subtle);
+      color: var(--text-primary);
+    }
+
+    .modal-confirm {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 28px 12px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="wallpaper">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <!-- Notificación Dynamic Island -->
+  <div id="dynamicIsland" class="dynamic-island">
+    <span id="toastIcon">✨</span>
+    <span id="toastText">Listo</span>
+  </div>
+
+  <main class="app-shell">
+    <!-- Cabecera -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">P</div>
+        <div class="brand-text">
+          <h1>Sorteo de Parking</h1>
+          <p id="todayDateLabel">Hoy</p>
+        </div>
+      </div>
+      <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Cambiar tema">🌙</button>
+    </header>
+
+    <!-- Segmented Control -->
+    <nav class="segmented-control" role="tablist">
+      <div id="segIndicator" class="seg-indicator"></div>
+      <button class="seg-btn active" data-tab="spots" type="button">
+        <span>Plazas</span>
+        <span id="badgeSpots" class="seg-badge">0/0</span>
+      </button>
+      <button class="seg-btn" data-tab="people" type="button">
+        <span>Personas</span>
+        <span id="badgePeople" class="seg-badge">0/0</span>
+      </button>
+      <button class="seg-btn" data-tab="result" type="button">
+        <span>Resultado</span>
+        <span id="badgeResult" class="seg-badge">—</span>
+      </button>
+      <button class="seg-btn" data-tab="history" type="button">
+        <span>Historial</span>
+        <span id="badgeHistory" class="seg-badge">0</span>
+      </button>
+    </nav>
+
+    <!-- VISTA 1: PLAZAS -->
+    <section id="view-spots" class="glass-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Plazas disponibles hoy</div>
+          <div class="card-subtitle">Marca las que quedan libres</div>
+        </div>
+        <button id="toggleAllSpotsBtn" class="text-action" type="button">Marcar todas</button>
+      </div>
+
+      <form id="addSpotForm" class="add-form" autocomplete="off">
+        <input id="spotInput" class="glass-input" type="text" placeholder="Ej: Plaza de Ana..." maxlength="40" />
+        <button id="addSpotBtn" class="add-btn" type="submit" aria-label="Añadir plaza">+</button>
+      </form>
+
+      <div id="spotsList" class="items-list"></div>
+    </section>
+
+    <!-- VISTA 2: PERSONAS -->
+    <section id="view-people" class="glass-card hidden">
+      <div class="card-header">
+        <div>
+          <div class="card-title">¿Quién necesita aparcar?</div>
+          <div class="card-subtitle">Selecciona los participantes de hoy</div>
+        </div>
+        <button id="toggleAllPeopleBtn" class="text-action" type="button">Marcar todos</button>
+      </div>
+
+      <form id="addPersonForm" class="add-form" autocomplete="off">
+        <input id="personInput" class="glass-input" type="text" placeholder="Ej: Carlos..." maxlength="40" />
+        <button id="addPersonBtn" class="add-btn" type="submit" aria-label="Añadir persona">+</button>
+      </form>
+
+      <div id="peopleList" class="items-list"></div>
+    </section>
+
+    <!-- VISTA 3: RESULTADO -->
+    <section id="view-result" class="glass-card hidden">
+      <div id="resultContainer">
+        <div class="empty-state">
+          Pulsa <strong>Sortear</strong> abajo para asignar las plazas seleccionadas de hoy.
+        </div>
+      </div>
+    </section>
+
+    <!-- VISTA 4: HISTORIAL -->
+    <section id="view-history" class="glass-card hidden">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Registro diario</div>
+          <div class="card-subtitle">Toca un nombre para filtrar sus días</div>
+        </div>
+        <button id="clearHistoryBtn" class="text-action" style="background: var(--danger-soft); color: var(--danger);" type="button">Borrar todo</button>
+      </div>
+
+      <div id="statsContainer" class="stats-grid"></div>
+      <div id="historyList"></div>
+    </section>
+  </main>
+
+  <!-- Glass Dock Inferior -->
+  <div class="glass-dock">
+    <div class="dock-summary">
+      <div id="dockCounts" class="dock-counts">0 plazas · 0 personas</div>
+      <div id="dockHint" class="dock-hint">Listo para sortear</div>
+    </div>
+    <button id="runDrawBtn" class="draw-btn" type="button">
+      <span>🎲</span>
+      <span>Sortear</span>
+    </button>
+  </div>
+
+  <!-- Modal Confirmación -->
+  <div id="confirmModal" class="modal-backdrop">
+    <div class="modal-box">
+      <h3 id="modalTitle">¿Borrar historial?</h3>
+      <p id="modalMsg">Esta acción eliminará todos los sorteos guardados.</p>
+      <div class="modal-btns">
+        <button id="modalCancelBtn" class="modal-btn modal-cancel" type="button">Cancelar</button>
+        <button id="modalConfirmBtn" class="modal-btn modal-confirm" type="button">Borrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // Generar icono Apple Touch Icon dinámico para pantalla de inicio de iPhone
+      function generateAppleIcon() {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 180;
+          canvas.height = 180;
+          const ctx = canvas.getContext('2d');
+          const grad = ctx.createLinearGradient(0, 0, 180, 180);
+          grad.addColorStop(0, '#007aff');
+          grad.addColorStop(1, '#5856d6');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 180, 180);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 104px -apple-system, BlinkMacSystemFont, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('P', 90, 96);
+          const link = document.getElementById('appleTouchIcon');
+          if (link) link.href = canvas.toDataURL('image/png');
+        } catch (e) {}
+      }
+      generateAppleIcon();
+
+      // Claves de almacenamiento persistente
+      const STORAGE_KEYS = {
+        SPOTS: 'parking_glass_spots_v2',
+        PEOPLE: 'parking_glass_people_v2',
+        HISTORY: 'parking_glass_history_v2',
+        THEME: 'parking_glass_theme_v2'
+      };
+
+      // Datos iniciales por defecto
+      const DEFAULT_SPOTS = [
+        { id: 's1', name: 'Plaza de Ana', active: true },
+        { id: 's2', name: 'Plaza de Antonio', active: true },
+        { id: 's3', name: 'Plaza de Lola', active: true }
+      ];
+
+      const DEFAULT_PEOPLE = [
+        { id: 'p1', name: 'Carlos', active: true },
+        { id: 'p2', name: 'Marta', active: true },
+        { id: 'p3', name: 'Javier', active: true },
+        { id: 'p4', name: 'Lucía', active: true },
+        { id: 'p5', name: 'Diego', active: true }
+      ];
+
+      // Estado de la aplicación
+      let state = {
+        spots: loadJSON(STORAGE_KEYS.SPOTS, DEFAULT_SPOTS),
+        people: loadJSON(STORAGE_KEYS.PEOPLE, DEFAULT_PEOPLE),
+        history: loadJSON(STORAGE_KEYS.HISTORY, []),
+        currentTab: 'spots',
+        lastResult: null,
+        historyFilter: null,
+        darkMode: localStorage.getItem(STORAGE_KEYS.THEME) === 'dark'
+      };
+
+      function loadJSON(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) return JSON.parse(JSON.stringify(fallback));
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : JSON.parse(JSON.stringify(fallback));
+        } catch (e) {
+          return JSON.parse(JSON.stringify(fallback));
+        }
+      }
+
+      function saveState() {
+        localStorage.setItem(STORAGE_KEYS.SPOTS, JSON.stringify(state.spots));
+        localStorage.setItem(STORAGE_KEYS.PEOPLE, JSON.stringify(state.people));
+        localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(state.history));
+      }
+
+      // Dynamic Island Toast
+      let toastTimer = null;
+      function showToast(text, icon = '✨') {
+        const island = document.getElementById('dynamicIsland');
+        document.getElementById('toastText').textContent = text;
+        document.getElementById('toastIcon').textContent = icon;
+        island.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          island.classList.remove('show');
+        }, 2400);
+      }
+
+      // Tema Claro / Oscuro
+      function applyTheme() {
+        const btn = document.getElementById('themeToggleBtn');
+        const meta = document.getElementById('metaThemeColor');
+        if (state.darkMode) {
+          document.body.classList.add('dark-mode');
+          btn.textContent = '☀️';
+          if (meta) meta.setAttribute('content', '#070b14');
+        } else {
+          document.body.classList.remove('dark-mode');
+          btn.textContent = '🌙';
+          if (meta) meta.setAttribute('content', '#eef2ff');
+        }
+      }
+
+      document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        state.darkMode = !state.darkMode;
+        localStorage.setItem(STORAGE_KEYS.THEME, state.darkMode ? 'dark' : 'light');
+        applyTheme();
+      });
+
+      // Fecha de hoy formateada
+      function updateHeaderDate() {
+        const now = new Date();
+        const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+        const str = now.toLocaleDateString('es-ES', opts);
+        document.getElementById('todayDateLabel').textContent = str.charAt(0).toUpperCase() + str.slice(1);
+      }
+
+      // Navegación entre pestañas
+      const tabOrder = ['spots', 'people', 'result', 'history'];
+      function switchTab(tabName) {
+        state.currentTab = tabName;
+        const idx = tabOrder.indexOf(tabName);
+        const indicator = document.getElementById('segIndicator');
+        indicator.style.transform = `translateX(${idx * 100}%)`;
+
+        document.querySelectorAll('.seg-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+
+        tabOrder.forEach((t) => {
+          const el = document.getElementById('view-' + t);
+          if (el) el.classList.toggle('hidden', t !== tabName);
+        });
+      }
+
+      document.querySelectorAll('.seg-btn').forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      // Conteo de victorias históricas por persona
+      function getWinCounts() {
+        const counts = {};
+        state.history.forEach((entry) => {
+          (entry.assigned || []).forEach((a) => {
+            counts[a.person] = (counts[a.person] || 0) + 1;
+          });
+        });
+        return counts;
+      }
+
+      // Renderizar Plazas
+      function renderSpots() {
+        const list = document.getElementById('spotsList');
+        list.innerHTML = '';
+
+        if (state.spots.length === 0) {
+          list.innerHTML = '<div class="empty-state">No hay plazas guardadas. Añade una arriba.</div>';
+          return;
+        }
+
+        state.spots.forEach((spot) => {
+          const row = document.createElement('div');
+          row.className = 'item-row' + (spot.active ? ' selected' : '');
+
+          const left = document.createElement('div');
+          left.className = 'item-left';
+          left.innerHTML = `
+            <div class="check-circle">${spot.active ? '✓' : ''}</div>
+            <div class="item-name">${escapeHTML(spot.name)}</div>
+          `;
+
+          const right = document.createElement('div');
+          right.className = 'item-right';
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'del-btn';
+          delBtn.textContent = '✕';
+          delBtn.setAttribute('aria-label', 'Eliminar plaza');
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.spots = state.spots.filter((s) => s.id !== spot.id);
+            saveState();
+            renderAll();
+            showToast('Plaza eliminada', '🗑️');
+          });
+
+          right.appendChild(delBtn);
+          row.appendChild(left);
+          row.appendChild(right);
+
+          row.addEventListener('click', () => {
+            spot.active = !spot.active;
+            saveState();
+            renderAll();
+          });
+
+          list.appendChild(row);
+        });
+
+        const allActive = state.spots.length > 0 && state.spots.every((s) => s.active);
+        document.getElementById('toggleAllSpotsBtn').textContent = allActive ? 'Desmarcar todas' : 'Marcar todas';
+      }
+
+      // Renderizar Personas
+      function renderPeople() {
+        const list = document.getElementById('peopleList');
+        list.innerHTML = '';
+        const winCounts = getWinCounts();
+
+        if (state.people.length === 0) {
+          list.innerHTML = '<div class="empty-state">No hay personas guardadas. Añade una arriba.</div>';
+          return;
+        }
+
+        state.people.forEach((person) => {
+          const row = document.createElement('div');
+          row.className = 'item-row' + (person.active ? ' selected' : '');
+          const wins = winCounts[person.name] || 0;
+
+          const left = document.createElement('div');
+          left.className = 'item-left';
+          left.innerHTML = `
+            <div class="check-circle">${person.active ? '✓' : ''}</div>
+            <div class="item-name">${escapeHTML(person.name)}</div>
+          `;
+
+          const right = document.createElement('div');
+          right.className = 'item-right';
+
+          if (wins > 0) {
+            const pill = document.createElement('span');
+            pill.className = 'win-pill';
+            pill.textContent = `🏆 ${wins}`;
+            right.appendChild(pill);
+          }
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'del-btn';
+          delBtn.textContent = '✕';
+          delBtn.setAttribute('aria-label', 'Eliminar persona');
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.people = state.people.filter((p) => p.id !== person.id);
+            saveState();
+            renderAll();
+            showToast('Persona eliminada', '🗑️');
+          });
+
+          right.appendChild(delBtn);
+          row.appendChild(left);
+          row.appendChild(right);
+
+          row.addEventListener('click', () => {
+            person.active = !person.active;
+            saveState();
+            renderAll();
+          });
+
+          list.appendChild(row);
+        });
+
+        const allActive = state.people.length > 0 && state.people.every((p) => p.active);
+        document.getElementById('toggleAllPeopleBtn').textContent = allActive ? 'Desmarcar todos' : 'Marcar todos';
+      }
+
+      // Añadir Plaza
+      function handleAddSpot(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById('spotInput');
+        const name = input.value.trim();
+        if (!name) {
+          showToast('Escribe el nombre de la plaza', '⚠️');
+          return;
+        }
+        const exists = state.spots.some((s) => s.name.toLowerCase() === name.toLowerCase());
+        if (exists) {
+          showToast('Esa plaza ya existe', 'ℹ️');
+          return;
+        }
+        state.spots.unshift({
+          id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          name: name,
+          active: true
+        });
+        input.value = '';
+        saveState();
+        renderAll();
+        showToast(`Añadida: ${name}`, '🅿️');
+      }
+
+      // Añadir Persona
+      function handleAddPerson(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById('personInput');
+        const name = input.value.trim();
+        if (!name) {
+          showToast('Escribe un nombre primero', '⚠️');
+          return;
+        }
+        const exists = state.people.some((p) => p.name.toLowerCase() === name.toLowerCase());
+        if (exists) {
+          showToast('Esa persona ya está en la lista', 'ℹ️');
+          return;
+        }
+        state.people.unshift({
+          id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          name: name,
+          active: true
+        });
+        input.value = '';
+        saveState();
+        renderAll();
+        showToast(`Añadido: ${name}`, '👤');
+      }
+
+      document.getElementById('addSpotForm').addEventListener('submit', handleAddSpot);
+      document.getElementById('addPersonForm').addEventListener('submit', handleAddPerson);
+
+      // Marcar / Desmarcar todos
+      document.getElementById('toggleAllSpotsBtn').addEventListener('click', () => {
+        const allActive = state.spots.every((s) => s.active);
+        state.spots.forEach((s) => (s.active = !allActive));
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('toggleAllPeopleBtn').addEventListener('click', () => {
+        const allActive = state.people.every((p) => p.active);
+        state.people.forEach((p) => (p.active = !allActive));
+        saveState();
+        renderAll();
+      });
+
+      // Algoritmo Fisher-Yates para mezcla aleatoria justa
+      function shuffleArray(arr) {
+        const copy = [...arr];
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      // Ejecutar Sorteo con animación de ruleta
+      let isDrawing = false;
+      document.getElementById('runDrawBtn').addEventListener('click', () => {
+        if (isDrawing) return;
+        const activeSpots = state.spots.filter((s) => s.active);
+        const activePeople = state.people.filter((p) => p.active);
+
+        if (activeSpots.length === 0) {
+          switchTab('spots');
+          showToast('Selecciona al menos 1 plaza', '⚠️');
+          return;
+        }
+        if (activePeople.length === 0) {
+          switchTab('people');
+          showToast('Selecciona al menos 1 persona', '⚠️');
+          return;
+        }
+
+        isDrawing = true;
+        switchTab('result');
+        const container = document.getElementById('resultContainer');
+
+        let ticks = 0;
+        const maxTicks = 10;
+        const interval = setInterval(() => {
+          ticks++;
+          const tempPeople = shuffleArray(activePeople);
+          const tempSpots = shuffleArray(activeSpots);
+          const count = Math.min(tempPeople.length, tempSpots.length);
+          let html = `
+            <div class="result-banner">
+              <h2>🎲 Sorteando plazas...</h2>
+              <p>Mezclando participantes al azar</p>
+            </div>
+          `;
+          for (let i = 0; i < count; i++) {
+            html += `
+              <div class="assign-card" style="opacity: 0.78;">
+                <div class="assign-person">
+                  <div class="avatar">${escapeHTML(tempPeople[i].name.charAt(0).toUpperCase())}</div>
+                  <span>${escapeHTML(tempPeople[i].name)}</span>
+                </div>
+                <span class="spot-tag">${escapeHTML(tempSpots[i].name)}</span>
+              </div>
+            `;
+          }
+          container.innerHTML = html;
+
+          if (ticks >= maxTicks) {
+            clearInterval(interval);
+            finalizeDraw(activeSpots, activePeople);
+            isDrawing = false;
+          }
+        }, 65);
+      });
+
+      function finalizeDraw(activeSpots, activePeople) {
+        const shuffledPeople = shuffleArray(activePeople);
+        const shuffledSpots = shuffleArray(activeSpots);
+        const assignCount = Math.min(shuffledPeople.length, shuffledSpots.length);
+
+        const assigned = [];
+        for (let i = 0; i < assignCount; i++) {
+          assigned.push({
+            person: shuffledPeople[i].name,
+            spot: shuffledSpots[i].name
+          });
+        }
+
+        const waiting = shuffledPeople.slice(assignCount).map((p) => p.name);
+        const unusedSpots = shuffledSpots.slice(assignCount).map((s) => s.name);
+
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('es-ES', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short'
+        }) + ' · ' + now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+        const record = {
+          id: 'h_' + Date.now(),
+          date: dateStr,
+          assigned,
+          waiting,
+          unusedSpots
+        };
+
+        state.lastResult = record;
+        state.history.unshift(record);
+        saveState();
+        renderAll();
+        showToast('¡Sorteo guardado en el historial!', '🎉');
+      }
+
+      // Renderizar Resultado
+      function renderResult() {
+        const container = document.getElementById('resultContainer');
+        const res = state.lastResult;
+        if (!res) {
+          container.innerHTML = `
+            <div class="empty-state">
+              Pulsa <strong>Sortear</strong> abajo para asignar las plazas seleccionadas de hoy.
+            </div>
+          `;
+          return;
+        }
+
+        let html = `
+          <div class="result-banner">
+            <h2>🎉 Plazas asignadas</h2>
+            <p>${escapeHTML(res.date)}</p>
+          </div>
+        `;
+
+        res.assigned.forEach((item) => {
+          html += `
+            <div class="assign-card">
+              <div class="assign-person">
+                <div class="avatar">${escapeHTML(item.person.charAt(0).toUpperCase())}</div>
+                <span>${escapeHTML(item.person)}</span>
+              </div>
+              <span class="spot-tag">${escapeHTML(item.spot)}</span>
+            </div>
+          `;
+        });
+
+        if (res.waiting && res.waiting.length > 0) {
+          html += `<div class="section-label">Sin plaza hoy (${res.waiting.length})</div><div class="chip-wrap">`;
+          res.waiting.forEach((name) => {
+            html += `<span class="wait-chip">🚶 ${escapeHTML(name)}</span>`;
+          });
+          html += `</div>`;
+        }
+
+        if (res.unusedSpots && res.unusedSpots.length > 0) {
+          html += `<div class="section-label">Plazas sobrantes (${res.unusedSpots.length})</div><div class="chip-wrap">`;
+          res.unusedSpots.forEach((spot) => {
+            html += `<span class="free-chip">🅿️ ${escapeHTML(spot)}</span>`;
+          });
+          html += `</div>`;
+        }
+
+        html += `
+          <button id="copyWhatsappBtn" class="whatsapp-btn" type="button">
+            <span>📋</span>
+            <span>Copiar resultado para WhatsApp</span>
+          </button>
+        `;
+
+        container.innerHTML = html;
+
+        document.getElementById('copyWhatsappBtn').addEventListener('click', () => {
+          copyRecordToClipboard(res);
+        });
+      }
+
+      function copyRecordToClipboard(record) {
+        let text = `🅿️ *SORTEO DE PARKING* (${record.date})
+
+`;
+        text += `✅ *Plazas asignadas:*
+`;
+        record.assigned.forEach((a) => {
+          text += `• *${a.person}* → ${a.spot}
+`;
+        });
+        if (record.waiting && record.waiting.length > 0) {
+          text += `
+⏳ *Sin plaza hoy:* ${record.waiting.join(', ')}
+`;
+        }
+        if (record.unusedSpots && record.unusedSpots.length > 0) {
+          text += `
+🟢 *Plazas libres:* ${record.unusedSpots.join(', ')}
+`;
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            showToast('Copiado para WhatsApp', '📋');
+          }).catch(() => fallbackCopy(text));
+        } else {
+          fallbackCopy(text);
+        }
+      }
+
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Copiado para WhatsApp', '📋');
+      }
+
+      // Renderizar Historial y Ranking
+      function renderHistory() {
+        const statsEl = document.getElementById('statsContainer');
+        const listEl = document.getElementById('historyList');
+        const winCounts = getWinCounts();
+
+        const sortedStats = Object.entries(winCounts).sort((a, b) => b[1] - a[1]);
+        statsEl.innerHTML = '';
+
+        if (sortedStats.length > 0) {
+          const allPill = document.createElement('button');
+          allPill.type = 'button';
+          allPill.className = 'stat-pill' + (state.historyFilter === null ? ' active-filter' : '');
+          allPill.textContent = `Todos (${state.history.length})`;
+          allPill.addEventListener('click', () => {
+            state.historyFilter = null;
+            renderHistory();
+          });
+          statsEl.appendChild(allPill);
+
+          sortedStats.forEach(([name, count]) => {
+            const pill = document.createElement('button');
+            pill.type = 'button';
+            pill.className = 'stat-pill' + (state.historyFilter === name ? ' active-filter' : '');
+            pill.textContent = `🏆 ${name}: ${count}`;
+            pill.addEventListener('click', () => {
+              state.historyFilter = state.historyFilter === name ? null : name;
+              renderHistory();
+            });
+            statsEl.appendChild(pill);
+          });
+        }
+
+        const filtered = state.historyFilter
+          ? state.history.filter((entry) =>
+              entry.assigned.some((a) => a.person === state.historyFilter)
+            )
+          : state.history;
+
+        if (filtered.length === 0) {
+          listEl.innerHTML = `<div class="empty-state">Aún no hay sorteos registrados${state.historyFilter ? ' para ' + escapeHTML(state.historyFilter) : ''}.</div>`;
+          return;
+        }
+
+        listEl.innerHTML = '';
+        filtered.forEach((entry) => {
+          const card = document.createElement('div');
+          card.className = 'history-entry';
+
+          const top = document.createElement('div');
+          top.className = 'history-top';
+          top.innerHTML = `<span class="history-date">📅 ${escapeHTML(entry.date)}</span>`;
+
+          const actions = document.createElement('div');
+          actions.className = 'history-actions';
+
+          const shareBtn = document.createElement('button');
+          shareBtn.type = 'button';
+          shareBtn.className = 'mini-btn';
+          shareBtn.textContent = '📋';
+          shareBtn.title = 'Copiar sorteo';
+          shareBtn.addEventListener('click', () => copyRecordToClipboard(entry));
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'mini-btn';
+          delBtn.style.color = 'var(--danger)';
+          delBtn.textContent = '✕';
+          delBtn.title = 'Eliminar registro';
+          delBtn.addEventListener('click', () => {
+            state.history = state.history.filter((h) => h.id !== entry.id);
+            saveState();
+            renderAll();
+            showToast('Registro eliminado', '🗑️');
+          });
+
+          actions.appendChild(shareBtn);
+          actions.appendChild(delBtn);
+          top.appendChild(actions);
+          card.appendChild(top);
+
+          entry.assigned.forEach((a) => {
+            const line = document.createElement('div');
+            line.className = 'history-line';
+            line.innerHTML = `
+              <strong>${escapeHTML(a.person)}</strong>
+              <span style="color: var(--accent); font-weight: 600;">${escapeHTML(a.spot)}</span>
+            `;
+            card.appendChild(line);
+          });
+
+          if (entry.waiting && entry.waiting.length > 0) {
+            const waitLine = document.createElement('div');
+            waitLine.style.cssText = 'font-size: 12px; color: var(--text-muted); margin-top: 6px;';
+            waitLine.textContent = `Sin plaza: ${entry.waiting.join(', ')}`;
+            card.appendChild(waitLine);
+          }
+
+          listEl.appendChild(card);
+        });
+      }
+
+      // Modal Borrar Todo el Historial
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+        if (state.history.length === 0) {
+          showToast('El historial ya está vacío', 'ℹ️');
+          return;
+        }
+        modal.classList.add('open');
+      });
+
+      document.getElementById('modalCancelBtn').addEventListener('click', () => {
+        modal.classList.remove('open');
+      });
+
+      document.getElementById('modalConfirmBtn').addEventListener('click', () => {
+        state.history = [];
+        state.historyFilter = null;
+        saveState();
+        modal.classList.remove('open');
+        renderAll();
+        showToast('Historial borrado', '🗑️');
+      });
+
+      // Actualizar contadores y badges
+      function updateBadgesAndDock() {
+        const activeSpotsCount = state.spots.filter((s) => s.active).length;
+        const activePeopleCount = state.people.filter((p) => p.active).length;
+
+        document.getElementById('badgeSpots').textContent = `${activeSpotsCount}/${state.spots.length}`;
+        document.getElementById('badgePeople').textContent = `${activePeopleCount}/${state.people.length}`;
+        document.getElementById('badgeResult').textContent = state.lastResult
+          ? `${state.lastResult.assigned.length}`
+          : '—';
+        document.getElementById('badgeHistory').textContent = `${state.history.length}`;
+
+        document.getElementById('dockCounts').textContent =
+          `${activeSpotsCount} ${activeSpotsCount === 1 ? 'plaza' : 'plazas'} · ${activePeopleCount} ${activePeopleCount === 1 ? 'persona' : 'personas'}`;
+
+        let hint = 'Listo para sortear';
+        if (activeSpotsCount === 0 || activePeopleCount === 0) {
+          hint = 'Selecciona plazas y personas';
+        } else if (activePeopleCount > activeSpotsCount) {
+          hint = `${activePeopleCount - activeSpotsCount} se quedarán sin plaza`;
+        } else if (activeSpotsCount > activePeopleCount) {
+          hint = `Sobrarán ${activeSpotsCount - activePeopleCount} plazas`;
+        } else {
+          hint = 'Plazas exactas para todos';
+        }
+        document.getElementById('dockHint').textContent = hint;
+      }
+
+      function escapeHTML(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function renderAll() {
+        renderSpots();
+        renderPeople();
+        renderResult();
+        renderHistory();
+        updateBadgesAndDock();
+      }
+
+      // Inicialización
+      applyTheme();
+      updateHeaderDate();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
